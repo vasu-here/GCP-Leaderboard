@@ -298,9 +298,9 @@ export default function Home() {
                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                           Email
                         </th>
-                        <th className="px-6 py-4 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        {/* <th className="px-6 py-4 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
                           Completed
-                        </th>
+                        </th> */}
                         <th className="px-6 py-4 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
                           Skill Badges
                         </th>
@@ -349,7 +349,7 @@ export default function Home() {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                               {(participant['User Email'] || 'N/A').replace(/^"|"$/g, '')}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                            {/* <td className="px-6 py-4 whitespace-nowrap text-center">
                               {allCompleted.toLowerCase() === 'yes' ? (
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium google-bg-green text-white">
                                   ✓ Yes
@@ -359,7 +359,7 @@ export default function Home() {
                                   No
                                 </span>
                               )}
-                            </td>
+                            </td> */}
                             <td className="px-6 py-4 whitespace-nowrap text-center">
                               <span className="google-blue font-bold text-lg">{skillBadges}</span>
                             </td>
