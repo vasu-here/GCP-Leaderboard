@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { put } from '@vercel/blob';
 
-export async function POST(request : NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     // Get the form data
     const formData = await request.formData();
-    const file : File = formData.get('file') as File;
+    const file: File = formData.get('file') as File;
     const password = formData.get('password');
 
-    console.log(password);
-    console.log(process.env.ADMIN_PASSWORD)
+    console.log('Password check:', password);
+    console.log('Expected:', process.env.ADMIN_PASSWORD);
+
     // Validate password
     if (password !== process.env.ADMIN_PASSWORD) {
       return NextResponse.json(
@@ -35,14 +35,10 @@ export async function POST(request : NextRequest) {
       );
     }
 
-    // Read file content
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Read file content for validation
+    const text = await file.text();
+    const lines = text.trim().split('\n');
 
-    // Validate CSV content (basic check)
-    const content = buffer.toString('utf-8');
-    const lines = content.trim().split('\n');
-    
     if (lines.length < 2) {
       return NextResponse.json(
         { error: 'CSV file must have at least a header and one data row' },
@@ -50,39 +46,18 @@ export async function POST(request : NextRequest) {
       );
     }
 
-    // Expected headers
-    // const expectedHeaders = [
-    //   'username',
-    //   'user email',
-    //   'gcp email',
-    //   'all skills and badges completed(Yes / No)',
-    //   'number of skills badges',
-    //   'names of completed skills',
-    //   'number of completed arcade games',
-    //   'names of it'
-    // ];
-
-    // const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    // const hasValidHeaders = expectedHeaders.every(expected => 
-    //   headers.some(header => header.toLowerCase().includes(expected.toLowerCase()))
-    // );
-
-    // if (!hasValidHeaders) {
-    //   return NextResponse.json(
-    //     { error: 'CSV headers do not match expected format' },
-    //     { status: 400 }
-    //   );
-    // }
-
-    // Save file to public directory
-    const filePath = path.join(process.cwd(), 'public', 'leaderboard.csv');
-    await writeFile(filePath, buffer);
+    // Upload to Vercel Blob
+    const blob = await put('leaderboard.csv', file, {
+      access: 'public',
+      addRandomSuffix: false, // Keep the same filename (overwrites previous)
+    });
 
     return NextResponse.json(
-      { 
+      {
         message: 'File uploaded successfully',
         timestamp: new Date().toISOString(),
-        rowCount: lines.length - 1
+        rowCount: lines.length - 1,
+        url: blob.url,
       },
       { status: 200 }
     );
@@ -90,8 +65,15 @@ export async function POST(request : NextRequest) {
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
-      { error: 'Failed to upload file' },
+      { error: 'Failed to upload file', details: String(error) },
       { status: 500 }
     );
   }
 }
+
+// Important: Configure the route to handle larger files
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};

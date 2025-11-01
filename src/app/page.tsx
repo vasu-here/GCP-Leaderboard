@@ -26,12 +26,22 @@ export default function Home() {
   const fetchLeaderboardData = async (): Promise<void> => {
     try {
       setLoading(true);
-      const response = await fetch('/leaderboard.csv');
+      // Changed from /leaderboard.csv to /api/leaderboard
+      const response = await fetch('/api/leaderboard', {
+        cache: 'no-store', // Always fetch fresh data
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch leaderboard data');
+      }
+
       const text = await response.text();
       const parsed = parseCSV(text);
       setLeaderboardData(parsed);
     } catch (error) {
       console.error('Error loading CSV:', error);
+      // Optionally show error to user
+      alert('Failed to load leaderboard data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -225,11 +235,10 @@ export default function Home() {
           <div className="flex border-b border-gray-200">
             <button
               onClick={() => setActiveTab('leaderboard')}
-              className={`flex-1 py-4 px-6 text-center font-medium transition-all relative ${
-                activeTab === 'leaderboard'
+              className={`flex-1 py-4 px-6 text-center font-medium transition-all relative ${activeTab === 'leaderboard'
                   ? 'google-blue'
                   : 'text-gray-600 hover:bg-gray-50'
-              }`}
+                }`}
             >
               <div className="flex items-center justify-center gap-2">
                 <span className="text-xl">🏆</span>
@@ -241,11 +250,10 @@ export default function Home() {
             </button>
             <button
               onClick={() => setActiveTab('rules')}
-              className={`flex-1 py-4 px-6 text-center font-medium transition-all relative ${
-                activeTab === 'rules'
+              className={`flex-1 py-4 px-6 text-center font-medium transition-all relative ${activeTab === 'rules'
                   ? 'google-blue'
                   : 'text-gray-600 hover:bg-gray-50'
-              }`}
+                }`}
             >
               <div className="flex items-center justify-center gap-2">
                 <span className="text-xl">📋</span>
@@ -318,8 +326,8 @@ export default function Home() {
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="flex items-center">
                                 <span className="font-medium text-gray-700 text-lg">
-                                    #{index + 1}
-                                  </span>
+                                  #{index + 1}
+                                </span>
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
