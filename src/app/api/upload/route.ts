@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
+import { put, del, list } from '@vercel/blob';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,10 +46,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upload to Vercel Blob
+    // Delete existing leaderboard files
+    try {
+      const { blobs } = await list({
+        prefix: 'leaderboard',
+      });
+
+      // Delete all existing leaderboard files
+      for (const blob of blobs) {
+        await del(blob.url);
+        console.log('Deleted old file:', blob.url);
+      }
+    } catch (delError) {
+      console.log('No existing file to delete or deletion failed:', delError);
+      // Continue anyway - file might not exist
+    }
+
+    // Upload new file to Vercel Blob
     const blob = await put('leaderboard.csv', file, {
       access: 'public',
-      addRandomSuffix: false, // Keep the same filename (overwrites previous)
+      addRandomSuffix: false, // No need for random suffix after deletion
     });
 
     return NextResponse.json(
@@ -70,10 +86,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// Important: Configure the route to handle larger files
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
