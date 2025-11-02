@@ -397,8 +397,16 @@ export default function Home() {
 
 function RulesSection() {
   const [activeSection, setActiveSection] = useState<any>(null);
-
-  const sections = [
+  type section = {
+    id : string,
+    title : string,
+    icon : string,
+    color : string,
+    content? : string[],
+    isDosDonts? : boolean,
+    isTable? : boolean
+  }
+  const sections :section[] = [
     {
       id: 'overview',
       title: 'Program Overview',
@@ -475,7 +483,7 @@ function RulesSection() {
 
       {/* Main Sections Grid */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {sections.map((section, index) => {
+        {sections.map((section : section , index) => {
           // Define gradient colors for each section
           const gradientClasses = {
             blue: 'bg-gradient-to-r from-blue-400 to-blue-500',
@@ -491,7 +499,7 @@ function RulesSection() {
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={() => setActiveSection(activeSection === section.id ? null : section.id)}
             >
-              <div className={`${gradientClasses[section.color]} px-6 py-4 flex items-center justify-between`}>
+              <div className={`${gradientClasses[section.color as keyof typeof gradientClasses]} px-6 py-4 flex items-center justify-between`}>
                 <div className="flex items-center gap-3">
                   <span className="text-3xl">{section.icon}</span>
                   <h3 className="text-xl font-medium text-white">{section.title}</h3>
