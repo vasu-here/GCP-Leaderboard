@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { put, del, list } from '@vercel/blob';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function POST(request: NextRequest) {
   try {
-    // Get the form data
     const formData = await request.formData();
     const file: File = formData.get('file') as File;
     const password = formData.get('password');
@@ -46,26 +52,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Delete existing leaderboard files
-    try {
-      const { blobs } = await list({
-        prefix: 'leaderboard',
-      });
+    // Convert file to buffer
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-      // Delete all existing leaderboard files
-      for (const blob of blobs) {
-        await del(blob.url);
-        console.log('Deleted old file:', blob.url);
-      }
+    // Delete existing leaderboard file from Cloudinary
+    try {
+      await cloudinary.uploader.destroy('leaderboard', {
+        resource_type: 'raw',
+        invalidate: true, // Invalidate CDN cache
+      });
+      console.log('Deleted old leaderboard file');
     } catch (delError) {
       console.log('No existing file to delete or deletion failed:', delError);
-      // Continue anyway - file might not exist
     }
 
-    // Upload new file to Vercel Blob
-    const blob = await put('leaderboard.csv', file, {
-      access: 'public',
-      addRandomSuffix: false, // No need for random suffix after deletion
+    // Upload to Cloudinary as raw file
+    const uploadResult = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'raw',
+          public_id: 'leaderboard', // Fixed public_id
+          format: 'csv',
+          invalidate: true, // Invalidate CDN cache
+          overwrite: true,
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      ).end(buffer);
     });
 
     return NextResponse.json(
@@ -73,7 +89,7 @@ export async function POST(request: NextRequest) {
         message: 'File uploaded successfully',
         timestamp: new Date().toISOString(),
         rowCount: lines.length - 1,
-        url: blob.url,
+        url: (uploadResult as any).secure_url,
       },
       { status: 200 }
     );

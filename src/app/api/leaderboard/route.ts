@@ -1,30 +1,31 @@
 import { NextResponse } from 'next/server';
-import { list } from '@vercel/blob';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 export async function GET() {
   try {
-    // Get the latest leaderboard.csv from Blob storage
-    const { blobs } = await list({
-      prefix: 'leaderboard.csv',
-      limit: 1,
+    // Get the CSV URL from Cloudinary
+    const csvUrl = cloudinary.url('leaderboard.csv', {
+      resource_type: 'raw',
+      secure: true,
     });
-
-    if (blobs.length === 0) {
-      return NextResponse.json(
-        { error: 'Leaderboard not found' },
-        { status: 404 }
-      );
-    }
-
-    const csvUrl = blobs[0].url;
 
     // Fetch the CSV content
     const response = await fetch(csvUrl, {
-      cache: 'no-store', // Always get fresh data
+      cache: 'no-store',
+      headers: {
+        'Cache-Control': 'no-cache',
+      },
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch CSV from blob storage');
+      throw new Error('Failed to fetch CSV from Cloudinary');
     }
 
     const csvText = await response.text();
@@ -34,6 +35,8 @@ export async function GET() {
       headers: {
         'Content-Type': 'text/csv',
         'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
       },
     });
   } catch (error) {
@@ -45,5 +48,4 @@ export async function GET() {
   }
 }
 
-// Enable Edge Runtime for faster responses (optional)
-export const runtime = 'edge';
+export const runtime = 'nodejs'; // Cloudinary SDK needs Node.js runtime
