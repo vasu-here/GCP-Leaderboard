@@ -208,6 +208,12 @@ export default function Home() {
           <h2 className="text-xl font-normal text-gray-600 ml-16">
             NIT Patna Leaderboard
           </h2>
+          {/* Footer */}
+          <div className="text-left mt-8">
+            <p className="text-sm text-gray-500">
+              Last Updated: <span className="font-medium">{new Date().toLocaleDateString()}</span>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -384,12 +390,7 @@ export default function Home() {
           )}
         </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-sm text-gray-500">
-            Last Updated: <span className="font-medium">{new Date().toLocaleDateString()}</span>
-          </p>
-        </div>
+
       </div>
     </div>
   );
@@ -398,15 +399,15 @@ export default function Home() {
 function RulesSection() {
   const [activeSection, setActiveSection] = useState<any>(null);
   type section = {
-    id : string,
-    title : string,
-    icon : string,
-    color : string,
-    content? : string[],
-    isDosDonts? : boolean,
-    isTable? : boolean
+    id: string,
+    title: string,
+    icon: string,
+    color: string,
+    content?: string[],
+    isDosDonts?: boolean,
+    isTable?: boolean
   }
-  const sections :section[] = [
+  const sections: section[] = [
     {
       id: 'overview',
       title: 'Program Overview',
@@ -483,7 +484,7 @@ function RulesSection() {
 
       {/* Main Sections Grid */}
       <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {sections.map((section : section , index) => {
+        {sections.map((section: section, index) => {
           // Define gradient colors for each section
           const gradientClasses = {
             blue: 'bg-gradient-to-r from-blue-400 to-blue-500',
